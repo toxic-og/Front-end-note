@@ -1,0 +1,113 @@
+Vue-router的基础使用方法
+一.配置路由与配置子路由
+1.在配置路由的时候，需要先引入路由插件，然后new出一个Router实例，在实例中设置routers数组，然后数组中每一个路由链
+接都是一个对象，对象中包含path路径，name路由名称和component对应的组件模板。
+2.新增路由时需要做两步：
+（1）首先是在components文件夹下新增一个.vue的文件，用来写组件的模板代码，业务逻辑和css样式
+（2）然后在router文件夹下的index.js的路由入口文件中引入这个新增的组件，并且在routers数组中添加这个路由链接的对象。
+3.利用router-link制作导航
+<router-link to="/"></router-link>
+标签中的to表示要跳转到的路径，前提是需要在router/index.js中进行配置。
+4.配置子路由
+配置子路由与配置路由的逻辑大体相同，不同的就是处理好父子之间的伦理关系，总体来看配置子路由有几个关键点：
+（1）需要准备好父模板和若干子模板
+（2）在父模板中引入<router-view>标签，这个标签可以进入路由的嵌套，是最顶层的出口，同样在子组件中也同样可以使用
+这个标签嵌套它的子组件。
+（3）在router/index.js中进行父子关系的配置，给A组件配置两个子组件时，就需要在A组件的路由链接对象中添加一对新的kv对，
+k是children关键字，value是一个数组，数组中包含着path路径与component组成的若干的对象，对应着子组件。注意的是子组件
+的配置声明只能声明在父组件的对象中，不能越级设置。在进入子组件配置时，name选项可以不用配置。
+
+二.vue-router传递参数的方法
+1.name传参，在路由配置中name选项可以进行传参。首先要配置name的属性，然后在.vue模板中通过{{$route.name}}的方式
+可以直接取出来，不经常使用
+2.<router-link :to>传参
+<router-link :to="{name: xxx, params: {key: value}}"></router-link> 一般用这种格式进行路由传参
+标签中的to属性是一个绑定属性，对应着一个对象，里面一般包含name和params两个key。name对应配置链接中的name，
+params对应着参数，也是一个对象，里面可以传递多个值。
+最后在模板中用{{$route.params.key}}的方式进行参数接收并渲染。
+3.url传参
+url传参的方式是通过配置路由链接完成的。在router/index.js中配置path: "/:xxx/:xxx"。前面是跳转的路径，后面的冒号表示
+要传递的参数，同样用{{$route.params.key}}的方式进行参数接收并渲染。可以通过这种方法进行正则匹配，如：
+path: '/ListNum/: newsID(\\d+)/: newsTitle'，这样加入正则之后，传递的非数字的参数就无法接收
+
+三.单页面多路由区域操作
+单页面多路由指的是一个页面中有多个路由区域，也就是有多个<router-view>标签，通过设置style样式来进行合理布局。
+当出现单页面多路由的配置时，就需要在router/index.js中，对components进行组件的name配置，同时在<router-view>
+标签中需要一个name的属性，当标签中没有name时，在index中的components中用default进行配置
+
+四.vue-router的redirect重定向
+1.redirect的基本重定向，配置起来很简单，只需要在配置路由链接的时候增加一个redirect:"/路由"的kv对就行
+2.重定向时传递参数，redirect: '/ListNum/: newsID(\\d+)/: newsTitle' 重定向到ListNum组件并给它传递参数
+
+五.alias别名的使用与路由的过渡动画
+1.路由链接中的别名与重定向很相似
+eg：
+{
+    path: '/001',
+    component: Num1,
+    alias: '/ListNum'
+}
+<router-link to="ListNum"></router-link> 起过别名之后，就可以在router-link标签中直接用to进行重定向。别名不能用在
+根目录下，否则不起作用
+2.redirect和alias的区别：
+redirect是直接改变了url的值，把url变成了真实的path路径
+alias中url路径没有改变，这种情况对用户是更友好的，改变的只是<router-view>中的内容
+3.路由的过渡动画
+使用过渡动画，需要用到这样的一个层次结构
+<transition name="fade">
+    <router-view></router-view>
+</transition>
+router-view标签外面需要用transition标签包裹，并且需要一个name属性。在组件过渡过程中，需要四个css类名进行切换，并且
+都与name有关，那么上例中这四个css类名为：
+fade-enter：进入过渡的开始状态，元素被插入时生效。只应用一帧后立即删除
+fade-enter-active：进入过渡的结束状态，元素被插入时生效。在过渡过程完成后删除
+fade-leave：离开过渡的开始状态，元素被删除时触发，只应用一帧后立即删除
+fade-leave-active：离开过渡的结束状态，元素被删除时生效，离开过渡完成后被删除
+//App.vue
+.fade-enter {
+    //设置不透明度
+    opacity: 0;
+}
+.fade-leave {
+    opacity: 1;
+}
+.fade-enter-active {
+    transition: opacity .5s;
+}
+.fade-leave-active {
+    opacity: 0;
+    transition: opacity .5s;
+}
+过渡模式mode：
+in-out：新元素先进入过渡，完成之后当前元素过渡离开，默认状态是in-out模式
+out-in：当前元素先过渡离开，然后新元素过渡进来
+
+六.mode的设置和404页面的处理
+1.路由属性的model设置：mode有两个值，分别是history和hash。history模式下url路径中是没有#号的，hash模式下url路径中是
+有#号的。官方给出的解释是这样的：
+history：依赖HTML5 History API和服务器配置
+hash：使用URL hash值来做路由。支持所有浏览器，包括不支持HTML5 History API的浏览器
+abstract：支持所有JavaScript运行环境，如Node.js服务器端。如果发现没有浏览器的API，路由会自动强制进入这个模式。
+2.404的配置
+{
+    path: '*',
+    component: Error
+}
+然后在新建一个叫Error的组件模板
+
+七.路由中的钩子
+路由中的钩子分的比较细，有全局前置的钩子函数，全局后置的钩子函数，组件内的钩子函数还有路由独享的钩子函数等
+完整的路由导航解析流程：
+1.导航被触发
+2.在失活的组件里调动离开守卫(生命周期函数)
+3.调用全局的beforeEach守卫
+4.在重用的组件里调用beforeRouteUpdate守卫
+5.在路由配置里调用beforeEnter
+6.解析异步路由组件
+7.在被激活的组件里调用beforeRouteEnter
+8.调用全局的beforeResolve守卫
+9.导航被确定
+10.调用全局的afterEach守卫
+11.触发DOM更新
+12.用创建好的实例调用beforeRouteEnter守卫中传给next的回调函数
+

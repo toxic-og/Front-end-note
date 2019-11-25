@@ -1,0 +1,312 @@
+二，vue的全局API
+什么是全局API：全局API区别于vue内置的一些指令，像是v-if，v-model，v-bind等这些指令都是vue内部封装好的一些指令，
+这些指令一般用于构造器中，而全局API并不是用于构造器中的，需要先声明全局变量或者直接在vue上定义一些新功能，说白了
+就是在构造器外部用vue提供给我们的API函数来定义新的功能
+
+1.Vue.directive：
+是什么：这个函数用于自定义一些新的全局指令。
+怎么用：需要传递三个参数，(el, binding, vnode)，这些参数同样适用于下面的周期函数：
+el：指令所绑定的元素，可以用来直接操作DOM
+binding：一个对象，包含指令的很多属性：
+  name：指令名，不包含v-前缀
+  value：指令的绑定值，例如v-my-directive="1 + 1"中，绑定值为2
+  oldValue：指令绑定的前一个值，仅在update和componentUpdated钩子中可用。无论值是否改变都可用
+  expression：字符串形式的指令表达式。例如v-my-directive="1 + 1"中，表达式为"1+1"
+  arg：传给指令的参数，可选。例如v-my-directive:foo中，参数为foo
+  modifiers：一个包含修饰符的对象。例如v-my-directive.foo.bar中，修饰符对象为{foo：true，bar：true}
+vnode：Vue编译生成的虚拟节点，可选参数
+oldVnode：上一个虚拟节点，仅在update和componentUpdated钩子中可用
+
+自定义指令的生命周期：
+自定义指令有五个生命周期(钩子函数)，分别是bind，inserted，update，componentUpdated，unbind。
+bind：只调用一次，指令第一次绑定到元素时调用，用这个钩子函数可以定义一个绑定时执行一次的初始化操作。
+inserted：被绑定元素插入父节点时调用，父节点不必存在于document中只要存在就可以调用。
+update：被绑定于元素所在的模板更新时调用，但是可能发生在其子节点更新之前，也就是说无论绑定值是否变化这个函数
+都会被调用。但是可以用过比较更新前后的值来忽略不必要的模板更新。
+componentUpdated：被绑定元素所在模板完成一次更新周期时调用(指令所在组件节点及其子节点全部更新后调用)
+unbind：只调用一次，指令与元素解绑时调用
+
+2.Vue.extend 构造器的延伸
+是什么：Vue.extend返回的是一个“扩展实例构造器”，也就是预设了部分选项的Vue实例构造器。经常服务于Vue.component
+用来生成组件，可以简单的理解为当在模板中遇到该组件名称作为标签的自定义元素时，会自动调用“扩展实例构造器”来生产
+组件实例，并挂载到自定义元素上。
+
+怎么用：在html页面上需要准备一个静态标签，然后在JavaScript标签中写逻辑代码，最后通过mount方法挂载到标签上。
+Vue.extend中传递一个对象，对象内需要一个模板属性和data属性。
+注意的是，data与构造器中的data不一样，这里的data是一个方法，方法的返回值是一个json对象
+定义的扩展实例构造器需要new出来，实例化，在通过内置的mount方法挂载到author标签上
+eg：
+var authorExtend = Vue.extend({
+    template: "<p><a v-bind: href='authorUrl'>{{authorName}}</a></p>",
+    data: function() {
+        return {
+            authorName: 'toxic-og',
+            authorUrl: 'http://www.baidu.com'
+            }
+        }
+})
+new authorExtend().$mount('author')
+
+注意：所有的extend最后都需要挂载到普通标签中。
+这个方法最常用于组件中，应用场景常见于写一个全局的扩展，然后放在某一个组件中，然后别的组件如果也用也可以写在别的
+组件中，有点装饰器的意思
+下面两种绑定实现的效果都是等同的，如果只是单一的用绑定这个功能，建议用第二种，如果是搭配组件进行使用建议用第一种。
+<author></author>          new authorExtend().$mount('author')
+<div id='author'></div>   new authorExtend().$mount('#author')
+
+3.Vue.set全局操作
+是什么：Vue.set是一个在构造器外部操作构造器内部数据，属性或者方法的一个接口。比如要通过操作构造器外部的一个方法来
+对构造器内部的count数据进行加减操作，那么就需要使用到Vue.set。
+注：外部数据指的是不在vue构造器里面data处声明，而是在构造器外部声明的数据，然后在data处引用就可以了。外部数据的引
+用可以让程序更加灵活
+eg：
+var outData = {
+    count: 1,
+    goodName: 'car'
+};
+var app = new Vue({
+    el: '#app',
+    data: outData
+})
+
+怎么用：以上面的例子来看，通过外部操作来改变数据的方法有三种，用Vue.set改变，通过Vue对象的方式改变和直接操作外部
+数据的方式改变。
+eg：
+<div id='app'>
+    <ul>
+        <li v-for='aa in arr'>{{aa}}</li>
+    </ul>
+<div>
+<button onclick='add()'>外部添加</button>  //外部添加</button>  用原始绑定方法绑定函数，需要加括号
+
+<script type='text/javascript'>
+    function add() {
+        Vue.set(outData, 'count', 4);  //用Vue.set改变
+        Vue.set(app.arr, 1, 'dd') 
+        app.count++   //通过vue对象app进行改变
+        outData.count++   //通过直接操作外部数据进行改变
+    }
+    var outData = {
+        count: 1,
+        arr: ['aaa', 'bbb', 'ccc']
+    }
+    var app = new Vue({
+        el: '#app',
+        data: outData
+    })
+
+为什么会有Vue.set方法来改变内部数据？
+原因是由于JavaScript的限制，vue并不能自动检测数组的这两种变化情况：
+（1）当利用索引直接修改数组中的某一项值时，vue不会自动更新
+（2）当修改数组的长度时，vue不会自动的更新
+这两种情况只能通过Vue.set方法进行修改，其他两种方法都是无效的，这就是这个方法存在的意义。
+
+4.Vue构造器的生命周期
+官方给出的构造器的8个生命周期函数
+8个函数可以分成四对：
+beforeCreate 模板创建之前会调用
+created 已经创建完模板之后调用
+这两个函数只会调用一次
+beforeMount 挂载之前调用
+mounted 挂载之后调用
+这两个函数在模板挂载到dom前后调用
+beforeUpdate 当data被修改时调用
+updated 虚拟dom重新渲染并应用更新时调用
+这两个函数是最常被调用的
+beforeDestroy 当执行vm.$destroy()函数时会调用这个方法，销毁组件之前调用
+destroyed 解除组件绑定并销毁组件之后调用这个方法
+
+5.Template制作模板
+三种模板制作方法：
+（1）直接写在选项中的模板，这种方法比较适用于规模比较小的模板，只是几句话而已
+eg：
+var app = new Vue({
+    el: '.app',
+    data: {
+        message: 'hello Vue'
+    },
+    template: `<h1 style="color: red">我是选项模板</h1> `
+})
+（2）写在template标签里的模板，这种方法适用于html代码规模比较大的模板
+<template id="demo">
+    <h2 style="color: red">我是template标签模板</h2>
+</template>
+<script type="text/javascript">
+    var app = new Vue({
+        el: '#app',
+        data: {
+            message: 'hello world'
+        },
+        template: '#demo'
+})
+</script>
+（3）写在script标签里的模板，用这种方法的话标签的type属性必须是"x-template"，这种方法可以直接引入外部文件做模板，
+如果html代码规模巨大，模板量很多，而且又要求界面简洁干净时，可以用这个方法
+<script type="x-template" id="demo2">
+    <h2 style="color: red">我是script标签模板</h2>
+</script>
+
+<script type="text/javascript">
+    var app = new Vue({
+        el: '#app',
+        data: {
+            message: 'hello Vue'
+        },
+        template: '#demo2'
+    }) 
+</script>
+注：第二种和第三种模板的写法，虽然没有在构造器选项中写，但是还是要用到构造器中的template选项的
+
+6.组件
+6.1定义Component组件
+是什么：Vue中的组件是重中之重，定义vue中的组件其实就是自定义标签。
+组件与指令有什么区别呢？
+组件注册的是一个标签，而指令注册的是已有标签的一个属性，相对来说，组件的功能比指令要更强一些
+怎么用：
+（1）全局化定义组件
+全局化定义组件就是在构造器的外部用Vue.component来注册组件
+eg:
+<div id="root">
+    <app></app>
+</div>
+<script type="text/javascript">
+    //这是全局注册的一个组件，利用模板选项实现了一个渲染效果，可以放在多个构造器的作用域中
+    Vue.component('app', {
+        template: `<div style="color: red">全局化注册的app组件</div>`
+    })
+</script>
+（2）局部定义组件
+<div id="root">
+    <ppa></ppa>
+</div>
+
+<script type="text/javascript">
+    var app = new Vue({
+        el: '#root',
+        //这是局部定义组件的方法，用到了components选项，这个要写在构造器内
+        components: {
+            "ppa": {
+                template: `<div style="color: red">局部定义的ppa组件</div>`
+})
+</script>
+
+6.2 component组件props属性设置
+两种获取属性值的方法，先写个例子
+eg：
+<div id="app">
+    <panda here="China"></panda>
+    //<panda from-here="China"></panda>
+</div>
+<script type="text/javascript">
+    var app = new Vue({
+        el: '#app',
+        components: {
+            "panda": {
+                template: `<div style="color:red">Panda from {{here}}</div>`,
+                props: ['here']
+                //props: ['fromHere']
+            }
+        }
+})
+这是第一种，直接定义属性并获取属性值，panda组件是局部定义的一个组件，这个组件中定义了一个here的属性，那么这个属性
+就要在构造器中进行绑定注册一下，构造器中的props属性是一个数组，然后在模板中用插值来显示这个属性。
+上例中的注释是另外一种情况，处理-的问题，在vue中是不认-这个符号的，所以在构造器中注册这个属性，要用小驼峰的方式。
+这种用-号设置属性分词的方法是一个坑，尽量少用。
+eg：
+<div id="app">
+    <panda v-bind: here="message"></panda>
+</div>
+<script type="text/javascript">
+    var app = new Vue({
+        el: '#app',
+        data: {
+            message: 'Sichuan'
+        },
+        components: {
+            "panda": {
+                template: `<div style="color:red">Panda from {{here}}</div>`,
+                props: ['here']
+            }
+        }
+})
+这种方式是在构造器中向组件中传值，这是最常用的方法。在构造器中设置一个data值，然后通过bind绑定的指令传给组件
+
+6.3 component组件的父子组件关系
+什么是父子关系？
+在一个自定义组件内使用了其他的自定义组件，这就形成了一个父子组件关系
+实现组件解耦，父子组件嵌套并声明，看下面的例子
+eg：
+<div id="app">
+    <toxic :where="message"></toxic>
+</div>
+<script type="text/javascript>
+    var city = {
+        template: `<div>Rizhao of Shandong</div>`
+    }
+    var toxic = {
+        template: `<div>
+            <p>{{where}} of China</p>
+            <city></city>
+        </div>`,
+        components: {
+            "city": city
+        }
+    }
+    var app = new Vue({    
+        el: '#app',
+        data: {
+            message: 'Shandong'
+        },
+        components: {
+            "toxic": toxic
+        }
+    })
+</script>
+上例中实现了组件的解耦和父子组件的嵌套与声明，组件解耦就是为了不影响构造器的可读性，让构造器代码更简洁，所以将
+构造器中组件的定义方法移出到外面，然后需要注意的是，父组件嵌套了子组件，那么就要在父组件的components选项中进行
+注册，而不是在构造器中进行子组件的注册，因为构造器相对子组件来说属于爷爷辈的，而子组件只能找父组件。
+
+6.4 component标签
+是什么：component标签是vue框架自定义的标签，用途就是可以动态绑定我们自己定义的组件，根据数据的不同更换不同组件。
+eg：
+<div id="app">
+    <component v-bind:is="who"></component>
+    <button @click="changeComponent">changeComponent</button>
+</div>
+<script type="text/javascript">
+    var componentA={
+        template:`<div style="color:red">I'm componentA</div>`
+    }
+    var componentB={
+        template:`<div style="color:yellow">I'm componentB</div>`
+    }
+    var componentC={
+        template:`<div style="color:blue">I'm componentC</div>`
+    }
+
+    var app = new Vue({
+        el: "#app",
+        data: {
+            who: 'componentA'
+        },
+        components: {
+            "componentA": componentA,
+            "componentB": componentB,
+            "componentC": componentC,
+        },
+        methods: {
+            changeComponent: function() {
+                if(this.who == 'componentA') {
+                    this.who = 'componentB';
+                }else if(this.who == 'componentB') {
+                    this.who = 'componentC';
+                }else {
+                    this.who = 'componentA';
+                }
+            }
+        }
+    })
+上例中component标签绑定了who属性，然后通过button按钮对这个属性进行动态修改标签，并且改变标签颜色。
+</script>
+
+6.5内置组件slot--插槽

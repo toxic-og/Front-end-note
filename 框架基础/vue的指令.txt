@@ -1,0 +1,100 @@
+vue的指令
+1.v-if指令：v-if 是vue的一个内部指令，指令用在html中，作用是判断DOM节点是否需要加载，v-if 与v-else是成对出现的
+v-show指令：调整css中display的属性，v-show绑定的信号量当是false时，会将css样式中的display属性置为none
+
+2.v-for指令：v-for指令用于渲染一组循环数据，解决模板循环问题，哪个标签需要就要写在哪个标签，注意不能写在需求标签的
+父标签。
+排序问题：首先解决排序问题需要用到vue中的computed属性来定义一个方法，然后在这个方法中要重新声明一个对象sortArrs,
+原因是vue会保护已声明的数据源，如果直接修改arrs是不被允许的。sort排序是按第一位进行排序的，所以多位数掺杂少位数进
+行排序是有问题的，解决方法就是自己定义一个函数，然后传给sort。解决的思路就是冒泡法，结果是负数的排在前面。
+
+3.v-text指令：这个指令的作用是解决一个问题，就是当我们网速很慢或者js代码出错了，用了这个指令就不会暴露出我们后面的
+代码，对用户比较友好。一旦用了这个指令，标签中间的插值就失去作用无法显示，哪怕代码出现错误text指令返回not defined
+错误时，后面的插值也是无法显示出来的。
+v-html指令：这个指令的作用就是在element节点处插入html标签，前提是插入的html标签需要在data中先注册，然后用插值的
+方法进行插入。但是注意的是这种方法渲染html是非常危险的，很容易导致xss攻击，所以在用户提交表单和可操作的网页上一定
+不要使用这个方法，只有一些能公开的信息上可以使用这个方法。
+
+4.v-on指令：这个指令用于绑定事件监听，需要用到methods属性来定义事件回调函数方法，简写方法是将v-on:替换成@
+v-on:click  -->  @click
+除了绑定点击事件，还可以绑定其他事件，比如键盘回车事件 v-on:keyup.enter。
+文本框中的数字会默认转变成字符串，可以用parseInt()函数来进行整体转换
+
+5.v-model指令：用于绑定数据源
+（1）双向绑定  
+  将数据绑定在特定的表单元素上，可以很容易的实现双向数据绑定。双向数据绑定就是插值文本与v-model指向同一个数据源
+（2）修饰符
+  .lazy：这个修饰符给model添加懒惰属性，在input输入框中输入信息，原始信息不改变，只有当input输入框change的时候也
+   就是失去焦点或者enter时才会改变
+  .number：这个修饰符给model添加了数字属性，在input输入框中只有数字信息会被保留，注意的是如果开头就输入字符串那
+   么这个功能将失去作用
+  .trim：这个修饰符会自动的过滤掉输入框首尾的空格，中间的空格会保留
+（3）文本域加入数据绑定
+   文本域绑定数据与input一样，用<textarea>标签
+（4）多选按钮绑定一个值
+   eg:
+   <h3></h3>
+   <input type="checkbox" id="isTrue" v-model="isTrue">
+   <label for="isTrue">{{isTrue}}</label>
+（5）多选绑定一个数组
+   eg:
+   <h3>多选绑定一个数组</h3>
+   <p>
+            <input type="checkbox" id="liubei" value="刘备" v-model="web_Names">
+            <label>刘备</label>
+            <input type="checkbox" id="guanyu" value="关羽" v-model="web_Names">
+            <label>关羽</label>
+            <input type="checkbox" id="zhangfei" value="张飞" v-model="web_Names">
+            <label>张飞</label>
+            <p>{{web_Names}}</p>
+   </P>
+（6）单选按钮绑定数据
+   eg:
+   <h3>单选绑定数据</h3>
+   <input type="radio" id="man" value="男" v-model="sex">
+   <label>男</label>
+   <input type="radio" id="woman" value="女" v-model="sex">
+   <label>女</label>
+   <p>{{sex}}</p>
+
+6. v-bind指令
+这个指令是用来绑定html中属性的值，绑定的前提是这个属性必须要先在构造器中的data选项中进行声明
+这个方法可以用于判断的时候使用
+eg：
+    <div class="world">
+        <div :style="className">绑定的数据</div>
+        <div :id="two">绑定的数据2</div>
+        <div :id="isOK ? one : two" >
+            这是一个三元表达式   
+        </div>
+        <input type="checkbox" v-model="isOK">
+        <label>点我进行改变</label>
+    </div>
+    <style>
+        #one{
+            font-size: 50%;
+            color: aqua;
+        }
+        #two{
+            font-size: 200%;
+            color: green;
+        }
+    </style>
+    <script type="text/javascript">
+        var app = new Vue({
+            el: '.world',
+            data: {
+                message: 'hello world',
+                one: 'one',
+                two: 'two',
+                isOK: false,
+                className: {
+                    color: 'red',
+                    fontSize: '24px'
+                }
+            }
+        })
+    </script>
+
+7. 其他的内部指令 v-pre，v-cloak，v-once
+

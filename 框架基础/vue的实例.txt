@@ -1,0 +1,29 @@
+vue中的内置
+一.实例属性
+1.vm.$data  类型是对象，这个是vue实例观察的数据对象，可以通过这个API访问data对象的属性
+2.vm.$props 类型是对象，当前组件接收的props对象，vue实例代理了对齐props对象属性的访问
+3.vm.$el  类型是element，vue实例使用的跟dom元素，不可修改
+4.vm.$options  类型是对象，用于当前vue实例的初始化选项，需要在选项中包含自定义属性时会有用处，不可修改
+5.vm.$parent  类型是vue实例，通过这个API可以找到父实例，不可修改
+6.vm.$root  类型是vue实例，通过这个API可以找到跟实例，不可修改
+7.vm.$children 类型是包含vue实例的数组，当前实例的直接子实例，需要注意$children并不保证顺序，也不是响应式的。如果
+使用$children进行数据绑定，可以使用一个数组配合v-for来生成子组件，并且使用数组作为真正的来源。 不可修改
+8.vm.$slots
+9.vm.$scopedSlots
+10.vm.$refs  类型是对象，持有注册过ref特性的所有dom元素和组件实例
+11.vm.$isServer  类型是boolean，判断当前实例是否运行与服务器
+12.vm.$attrs
+13.vm.listeners
+二.实例方法
+1.vm.$watch
+2.vm.$set
+3.vm.$delete
+vm.$mount  挂载的方法
+vm.$foreUpdate  更新的方法
+vm.$nextTick  data数据被修改调用这个方法
+vm.$destroy  卸载的方法
+三.实例事件
+vm.$on  在构造器外部添加事件
+vm.$once  执行一次的事件
+vm.$off  关闭事件
+vm.$emit 触发当前实例上的事件，附加参数都会传给监听器回调

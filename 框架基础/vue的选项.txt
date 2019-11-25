@@ -1,0 +1,143 @@
+Vue中的选项操作
+1.propsData 全局扩展的数据传递，这个方法用的比较少，不光这个方法，就连扩展在实践项目中用的都少。这个选项只用于
+new创建实例中，在创建实例时传递props，主要作用是方便测试。
+eg：
+    <h1>propsData Option demo</h1>
+    <hr>
+    <!-- 扩展标签 -->
+    <header></header>
+    
+    <script type="text/javascript">
+        var header_extend = Vue.extend({
+            template: `<p>{{message}}--{{a}}</p>`,
+            data: function() {
+                return {
+                    message: '我是一个全局的扩展'
+                }
+            },
+            //templata:`<p>{{a}}--{{message}}</p>`,
+            props: ['a']
+        })
+        new header_extend({propsData:{a:"我是全局的扩展"}}).$mount('header')
+    </script>
+一个小坑：使用props传参必须要有data选项。
+上面例子中解决propsData传值需要进行三步：
+首先在new的扩展实例中用propsData进行传递，propsData是一个对象，对象内部的value也是一个对象。
+然后在扩展构造器中使用props选项声明这个变量进行接收数据，props选项是一个数组
+最后在模板中使用插值方式渲染出来
+
+2.computed 计算选项
+computed选项的作用是对原数据进行简单运算改造输出，改造输出包括有格式的编辑，大小写的转换，顺序重排，添加符号等
+计算选项对应着函数
+eg：格式化输出
+    <h1>computed Option demo</h1>
+    <hr>
+    <div class="app">
+        <p>这双鞋的价格是：{{newprice}}</p>
+    </div>
+    
+    <script type="text/javascript">
+        var app = new Vue({
+            el: '.app',
+            data: {
+                price: 1000
+            },
+            computed: {
+                //newprice: function() {
+                //return this.price = "￥" + this.price + "元"
+                newprice:app => app.price = "￥" + app.price + "元",
+            }}
+        })
+在计算选项中是可以使用箭头函数的，但是不解决this的指向问题，所以这时就需要用app实例来访问
+3.methods 方法选项
+methods选项中对应的是事件回调函数的方法，所有的事件回调函数都写在这个选项中
+（1）methods传递参数的方法
+先要在methods选项中进行形参声明，然后在绑定调用时直接传递
+（2）methods中的$event参数，这个参数与原生的mouseevent相同，适用于交互性特别强的场景中，这个方法不是经常使用
+方法是<button @click(100, $event>加价</button>  可以在js代码中打印出来$event发现这时MouseEvent对象，里面有大量
+的鼠标点击事件
+（3）用native修饰符给组件绑定构造器中的原生事件，这个方法是开发中很常用的，这样被绑定的组件就不用写methods方法了
+        <p><Smallcomponent @click.native="click(200)"></Smallcomponent></p>
+//通过native绑定之后，下面的smallcomponent组件就很轻巧了，methods中的方法也可以多次复用
+        Vue.component('Smallcomponent',{ 
+            template:`<button>增加</button>`
+        })
+        var app = new Vue({
+            el: '.app',
+            data: {
+                price: 1000
+            },
+            
+            methods: {
+                click: function(num) {
+                    if(num !=''){
+                        this.price += num
+                    }else(this.price += 10)
+                }
+            }  
+        })
+注意，在methods选项中不建议使用箭头函数来定义方法，因为箭头函数绑定了父级作用域的上下文，所以this将不会按照期望
+指向vue实例，如果非要使用箭头函数那么就要解决this的指向问题，解决方法是用app实例进行调用
+4.watch 监控数据选项
+数据变化的监控是经常使用到的，设计一个穿衣指南的demo
+        <div class="app">
+        <p>今日的温度：{{temperature}}°</p>
+        <p>穿衣建议：{{clothes}} </p>
+        <button @click="addTemperature">增温</button>
+        <button @click="reduceTemperature">降温</button>
+    </div>
+    
+    <script type="text/javascript">
+        var recommend = ['睡大觉', '全副武装', '羽绒服', '夹克长裙', 'T恤短裤']
+        var app = new Vue({
+            el: '.app',
+            data: {
+                temperature: 10,
+                clothes: '夹克长裙'
+            },
+            
+            methods: {
+                addTemperature: function() {
+                    this.temperature += 5
+                },
+                reduceTemperature: function() {
+                    this.temperature -= 5
+                }
+            },
+            watch: {
+                temperature: function(newVal, oldVal) {
+                    if(newVal >= 25) {
+                        this.clothes = recommend[4]
+                    }else if(newVal < 25 && newVal >= 10) {     
+                        this.clothes = recommend[3]
+                    }else if(newVal < 10 && newVal >= -5) {
+                        this.clothes = recommend[2]
+                    }else if(newVal < -5 && newVal >= -15) {
+                        this.clothes = recommend[1]
+                    }else {
+                        this.clothes = recommend[0]
+                    }
+                }
+            }
+        })
+另外通过实例.$watch('监控的数据'，回调函数)的方法，可以把监控数据写在构造器外面，解耦构造器
+
+5.mixins 混入选项，类型是一个数组对象
+（1）mixins一般有两种用途：
+在你写好构造器后，需要增加方法或者临时有活动时使用方法，这时用混入会减少源代码的污染，比如电商网站打八折，
+满100减10元的活动等。
+有很多地方都会用到的公共方法，用混入的方法可以减少代码量，实现代码复用，比如一些公共方法混入构造器
+（2）mixins的一般使用方法，通常会在构造器外部定义一个接收updated的生命周期函数的变量，然后在构造器内部通过mixins
+选项进行声明就可以了，mixins的调用顺序都是混入的先执行，然后构造器内部的再执行，这并不是方法的覆盖，而是被执行了
+两边。不过当混入的方法与构造器的方法重名时，混入的方法会不起作用
+（3）mixins也可以进行全局的混入，注意的是当使用全局混入时，mixin没有s，全局混入的执行顺序要优先于混入和构造器的方法
+eg：Vue.mixin({
+        updated: function() {
+            console.log('我是全局混入的')
+        }
+    })
+
+6.extends 扩展选项
+extends的类型是一个对象，可以无需使用Vue.extend而扩展另一个组件，可以是一个简单的选项对象或构造器，主要是为了便于
+扩展单文件组件，与mixins很类似
+

@@ -1,0 +1,414 @@
+一，函数：
+var add = function ()/let add = function()  可以直接声明一个标识符来接后面的匿名函数
+函数会声明提升，函数表达式不会
+箭头函数：
+无参的用（）代替
+一参的，参数列表可以省略（）
+多参的要有（，）
+箭头函数，箭头左边是函数形参，右边是返回值，返回值用{}包裹，加return语句，如果返回值只有一行语句，
+可以省略{}和return语句。另外要注意的是有{}时，必须有return语句
+
+导入导出：对于导入多个模块，模块里又有相同标识符的情况，可以用import * as 标识符  from 模块  来导入
+这里的as其实就是给后面的整个模块加了一个标识符，一种名词限定
+
+
+二，react框架
+在react里，基础的结构是组件，一个网页是由一个个组件组合起来的。
+要显示出一个组件需要用class定义一个类出来，react框架要求不能直接写，需要继承
+所以：class Root extends React.Component   Root类从 React.component 上继承
+***render()  渲染函数，最常用
+
+render 注意事项 
+1.作为渲染函数用，无参，花括号里面有return语句。 return语句里面可以写封口的单标签，这个标签本质是一个组件。
+render函数只能返回唯一的一个顶级元素，也就是说只能返回一个根元素。
+render函数里面可以写表达式，用{}包起来，{}写在return语句里面
+2.作为DOM树使用，两参，第一参要求一个jsx组件，第二参是一个查找路径
+单标签的封口方式，如果严苛的话要写成 <Root />
+
+不要用create系方法，创建组件很麻烦，就用jsx
+声明式编程：react框架，类似填空题，流程固定
+命令式编程：jQuery，类似问答题，每一个流程都需要自己来操作
+
+（一）react框架核心之一：state
+state 状态的意思，这是react组件的状态属性，每一个组件都有一个state状态属性，使用的时候用this调用
+state是每一个组件自己内部使用的，是组件自己的属性
+修改state属性用setstate({ }) 方法，但是不建议把setstate放在render中，因为state变化就会调用render渲染，反复调用
+反复渲染，因此建议把setstate扔出去。
+setTimeout(fn, timeout)  两参函数，timeout秒之后做什么事情，做一次
+setInterval(fn, timeout) 两参函数，间隔timeout秒后做什么事情，一直做
+
+组件接收数据建议用受控组件，使用受控组件的前提必须定义状态，受控组件必须有状态来更新数据
+
+（二）props属性 的几个问题：
+1.props的 作用是组件与组件之间进行联系的
+2.props的目的是为了给组件增加属性
+3.props写在组件标签上，也就是说不能在组件定义里面
+4.注意this指的是谁，this并不是指标签组件，而是在哪个定义组件内，this就是哪个组件的实例
+5.props的默认属性，设置默认属性，用defaultProps方法来设置，返回一个对象。
+如：有个react类是Person，给Person类设置默认属性
+Person.defaultProps = {
+    age: 18,
+    sex: '男'
+}
+
+6.对props中的属性值进行类型限制和必要性限制
+需要引入props-types库
+Person.propTypes = {
+    name: propTypes.string.isRequired(isRequired 必须的)
+    age: propTypes.number.isRequired 
+
+7.在组件内使用static关键字定义的方法，是在给组件类添加指定的属性，是直接由类调用的属性，一般用于PropTypes方法进行
+类型检查。如果没有这个关键字，那么就是在给组件对象添加属性，一般就是state状态属性，如果用于在构造器中设置state状态
+属性，那么就是this的用法。
+
+8.在标签中使用 {...this.props} 语法是无敌的存在，这个语法表示前面标签中写了什么属性，这里就传什么属性并解构，这个作用
+主要就是简化了代码，两个以上的标签属性都可以这样写，另一个作用就是简化了类型检查，可以不用再做类型检查了，因为前面
+能传过来的属性就是合法属性。
+
+（三）构造器constructor ：
+1.严格来说，组件的state应该写在构造器中。
+2.构造器继承自父类，一定要有一个参数，props
+3.props在构造器中使用要用super调用，通过调用super组件找到props然后传入构造器中
+4.在构造器函数里直接用形参props就行，离开这个函数还是用this.props
+
+（四）组件的生命周期
+主要是三大阶段：
+mount   准备阶段
+componentWillMount  准备把组件加入dom树中，渲染前使用
+render
+componentDidMount  组件已经加载进了dom树
+
+update  更新阶段
+componentWillReceiveProps(nextPrpos) 当组件接收新的属性时回调
+shoutComponentUpdate(nextProps, nextState)  return true/false 
+componentWillUpdate(nextProps, nextState)
+render
+componentDidUpdate(prevProps, prevState)
+
+UNmount   卸载阶段
+componentWillUnmount  组件将要卸载
+移除组件的方法：ReactDOM.unmountComponentAtNode(document.getElementById(""))这个方法不是组件生命周期中
+的方法，是操作DOM树的方法，通常用于事件监听中
+
+（1）一般mount阶段是只会加载一次，在组件首次渲染时调用mount方法进行加载，调用mount时，先调用willmount，然后
+进行首次的渲染render，然后会调用didmount，加载结束。
+（2）update更新方法都是在state和props发生改变时调用，props改变 -> willreceiveprops -> shout方法 -> true ->willupdate
+-> render -> didupdate  (false 直接返回，不渲染） state一样，只是不走willreceive方法
+（3）update是经常做的 next参数是将要改变的参数，perv是上一个的参数。
+（4）生命周期函数用的很少，主要是了解组件里面发生的过程，shou函数可以用一下，可以作为拦截器使用
+componentWillUpdate 这个阶段已经是既定事实，无法撤回，但是对于里面将要发生的参数改变可以进行修改。
+
+声明周期中重要的勾子：
+render() 最重要
+componentDidMount()  开启监听，发送ajax请求，初始化的异步操作
+componentWillUnmount()  做一些收尾工作，如清理定时器
+componentWillReceiveProps() 用于父组件接收新的属性
+
+（五）无状态组件，也叫函数式组件
+无状态组件就是没有state状态的组件，是对只有render渲染函数的组件进行的简化。
+function Root(props) {
+return <div>{props.namel}</div>    - >    let Root = props -> <div>{props.name}</div>
+}
+
+无状态组件只是没有状态，但是需要一个参数，props，props通过父类传进来，Root大写，因为jsx规范。
+如果一个组件比较复杂，有state，有props，那么就写常规组件就行，如果一个组件很简单，只是有一个render，那么就
+可以用无状态组件大大简化
+
+（六）高阶组件
+在对一个组件使用装饰器时，装饰器会覆盖原来组件的定义，而走装饰器函数里面的逻辑定义，当把装饰器拿掉之后，又会还原
+所以说装饰器其实就是一个简单的render函数
+
+（七）路由总结：
+1.为了使用前端路由，需要导入react-router-dom（web版）库来解决，这是一个基于react的插件库。专门用来实现一个SPA应用。
+2.在render函数中要先使用Router组件来定义一下路由，内部包了Route定义，route是不可见的。
+什么是SPA技术：
+首先通过利用SPA技术可以实现一个单页面应用，整个应用只有一个完整的页面，那么在这种情况下，路由就起到至关重要的作用，
+路由是一种映射关系，用来映射了path路径与调用组件的关联关系。所以通过键入不同的path路径就会调用不同的组件，修改dom
+的结构，然后实现动态的渲染，但是页面是没有变化的，这就是SPA技术。使用react-router就是实现前端组件的替换，同时在单页
+面应用中的数据都需要通过ajax请求来获取实现前端的一个异步展现。
+
+3.路由的分类：
+a.后端路由：node服务器端路由，value是function，用来处理客户端提交的请求并返回一个响应数据
+后端注册路由：router.get(path, function(req, res))   当node接收一个请求时，根据请求路径找到匹配路由，调用路由中的函数
+来处理请求，返回响应数据
+b.前端路由：浏览器端路由，value是component，当请求的是路由path时，浏览器端没有发送http请求，但界面会更新显示对应
+组件。
+前端注册路由：<Route path="/about" component={About}> 当浏览器的hash变为#about时，前端路由组件就会变为About
+组件。
+
+4.react-router中常用的一些组件与对象
+<BrowserRouter>  浏览器路由  没有带#号的路由，es5语法出来之后基本上没有#号了
+<HashRouter>  哈希路由，这个路由是带#号的，有锚点的作用，es5语法之前的url基本都带#号
+<Route>  路线
+<Redirect>  重定向，跳转
+<Link> 
+<NavLink>   导航链接
+<Switch>  交换
+history对象  有push方法
+match对象
+withRouter对象
+注：
+<Link> ,<Link> 和<a> 标签的区别，前两个是路由标签，在NetWork中是不会发送网络请求的，后面的a标签会发送网络请求，
+发送网络请求会造成页面跳转，刷新，体验不好。
+所以前两个是路由标签后面的是非路由标签
+
+5.如何编写路由效果：
+a.编写路由组件
+b.在父路由组件中指定 路由链接：<NavLink> 路由：<Route>
+
+6.向路由组件传递数据的方式：
+通常都是从父组件向子组件进行传递，父组件在路由链接中通过冒号(:)的方式进行传递，这里冒号的作用即起到占位符的作用又起
+到了标识符的作用，这时这部分就起到了参数的作用。
+这时在子组件的props属性中就多了一个match的属性，可以在这里进行数据的提取，提取的数据就是根据父组件的标识符进行对应。
+eg： 向事件监听函数中传递数据，通过绑定一个回调函数的方式解决
+this.state.messages.map((m, index) => {
+<li key={index}>
+    <NavLink to={`/home/message/messagedetail/${m.id}`}>{m.title}</NavLink>
+    &nbsp;&nbsp;<button onClick={() => this.showDetail(m.id)}>查看</button>
+</li>
+})
+往常的时候，事件监听的回调函数传递的是event对象
+this.state.messages.map((m, index) => {
+<li key={index}>
+    <NavLink to={`/home/message/messagedetail/${m.id}`}>{m.title}</NavLink>
+    &nbsp;&nbsp;<button onClick= {this.showDetail}>查看</button>
+</li>
+})
+
+7.两种路由跳转的方式
+在react-router-dom中的history属性中有两种方式，push和replace，push表示压栈，replace表示替换当前，路由的跳转本质
+上用的是push方法
+eg：通过js实现整页跳转
+reqPage = () => {
+    window.location = 'http://www.baidu.com' 
+}
+<button onClick = {this.reqPage}>页面跳转</button>
+
+（八）功能界面的组件化编码流程
+1.拆分组件：拆分界面抽取组件。
+不管多复杂的组件，外部必须有一个根组件，通常叫APP或者root。然后其他的组件都在根组件上进行罗列或者嵌套。
+2.实现静态组件：使用组件实现静态界面的效果，也就是静态网页界面。
+3.实现动态组件： 也就是AJAX技术
+    1).动态显示初始化数据。
+    2).交互功能(从绑定事件监听开始)
+4.问题1：数据保存在哪个组件中
+看数据是某个组件需要(直接放在那)，还是某些组件需要(把数据放在这些组件共同的父组件那)
+问题2：需要在子组件中改变父组件的状态，怎么改变？
+子组件不能直接改变父组件的状态，状态在哪个组件中，更新状态的行为(事件)就应该定义在哪个组件。
+解决方案：例如状态在父组件中，那么就在父组件定义这个行为或者说函数，然后通过子组件的标签将这个函数通过props属性
+传递给子组件，让子组件调用更新状态的函数达到更新父组件状态的效果
+
+（九）收集表单数据
+1.原生DOM中input标签的onChange属性是在失去焦点之后触发。react中的input标签的onChange在输入之后就调用
+2.受控组件：表单项输入的数据能自动收集成状态。非受控组件：需要时才手动读取表单输入框中的数据
+
+（十）react脚手架应用分析
+1.一个应用被称为包，或者说一个文件夹被称为包，最关键的因素是因为这个文件夹中有package.json文件，这个文件是包的
+描述信息package.json就是用来描述当前项目相关信息的一个文件。
+2.一个package.json文件主要包含三个部分，1.标识(name, version) 2.依赖(dev，dep) 3.运行或者打包的相关命令(scripts)
+README.md文件是一个应用的说明文件，类似应用手册的文件。这个文件传到github上之后能完美的转换成网页格式
+3.react官方提供了一个用于构件react项目的脚手架库：create-react-app，这个库可以直接生成脚手架文件。一个完整的脚手架
+项目的整体技术架构为：react+webpack+es6+eslint(检查代码是否规范的工具)。使用脚手架开发的项目有三个特点：模块化，
+组件化，工程化。工程化指通过一个命令就可以对项目进行打包编译
+4.命令：
+npm root -g 可以查看npm包的全局下载根目录
+npm install -g create-react-app  通过全局模型下载这个脚手架包
+create-react-app hello-react(将要生成的包名)  生成脚手架包
+cd hello-react  进入脚手架项目
+npm (run) start  启动项目  为什么是npm run start而不是run XXX，原因是start指的是package.json文件中配置的start命令
+npm install --save 包名  save表示运行时需要
+
+
+（十一）react框架的ajax请求
+主要有两种方式发送ajax请求，1.axios库，这个库封装了XMLHttpRequest对象，风格是promise风格，前端服务器端都能用。
+2.fetch原生函数，这个是浏览器的原生函数，但是不是XMLHttpRequest对象提交的ajax请求，而且老版本浏览器不兼容，必须
+要引入fetch.js兼容库
+
+（十二）组件间通信的几种方式
+1.props通信
+共同的数据放在父组件上，特有的数据放在自己组件内部。
+利用props传递数据只能一层一层的传递。
+传递一般数据 --> 父组件传递给子组件 --> 子组件读取数据
+函数数据 --> 子组件传递给父组件 --> 子组件调用函数
+2.消息订阅与发布机制，常用的库是mobx和PubSubJS
+mobx的思想是装饰器
+PubSubJS的思想的回调函数
+3.redux库
+
+三，redux
+（一）redux是什么
+1.redux是一个独立专门用于做状态管理的js库，并不是react插件库。
+2.redux是可以用在angular或者vue等项目中的，但是用起来比react项目要更麻烦，所以这个库跟react更合拍。
+3.redux的作用就是管理react应用中多个组件共享的状态，redux就是对状态进行集中式管理。
+设计的思想是状态集中放在这个库里面，然后这个库提供一些修改的方式暴露出去，哪个组件需要修改就调用这些修改的方法。
+所以需要注意的一点就是引用了这个库之后，状态就不在组件中放着了
+4.什么情况下需要使用redux：能用就用
+某个组件的状态，需要共享时使用
+某个状态需要在任何地方都可以拿到时需要使用
+一个组件需要改变全局状态时需要使用
+一个组件需要改变另一个组件状态时需要使用
+
+（二）redux的工作机制
+redux的主要功能就是两个，读取状态跟修改状态。
+读取状态是比较简单的，可以直接通过store读取。
+修改状态是redux的一个难点，过程比较复杂，在修改状态的时候，组件会先经过Action Creators，然后到Reducers，然后到
+Store，最后回到组件。
+最先经过ActionCreators时需要用这个ActionCreators工厂函数生成action，然后是需要调用dispatch(action)方法，传action参
+数，这个参数内部包含了两个方面，type和data。type指定了类型，意味着需要进行某种操作，是修改还是删除还是添加等等。
+data指定了操作需要的数据，可有可无。reducers(oldState, action)是一个函数，根据一个旧的状态和行为，返回一个newState，
+然后将返回值给store，让store进行setState进行状态的修改。
+
+（三）redux的API
+1.1 createStore() 创建包含指定reducer的store对象
+eg：
+import {createStore} from 'redux';
+import counter from './reducers/counter' // 自己定义的
+const store = createStore(counter)
+
+1.2 store对象
+作用：redux库最核心的管理对象
+它内部维护着 state， reducer
+核心方法：getState() dispatch(action) subscribe(listener)
+eg:
+store.getState()
+store.dispatch( {type:'INCREMENT', number} )
+store.subscribe(render)
+
+1.3 applyMiddleware()
+作用：应用上基于redux的中间件(插件库)，applyMiddleware()是一个函数
+eg：
+import {createStore, applyMiddleware} from 'redux'
+import thunk from 'redux-thunk'  //redux-thunk是redux的异步中间件插件库
+const store = createStore(
+    counter,
+    applyMiddleware(thunk)  //应用上异步中间件
+)
+
+1.4 combineReducers()
+作用：合并多个reducer函数
+eg：
+export default combinReducers({
+    user,
+    chatUser,
+    chat
+})
+
+2.redux的三个核心概念
+2.1 action
+标识要执行行为的对象
+包含2个方面的属性：
+type：标识属性，值为字符串，唯一必要属性
+xxx：数据属性(data)，值类型任意，可选属性
+eg：
+const action = {
+    type : 'INCREMENT',
+    data : 2
+}
+Action Creator --> 创建action的工厂函数
+//这个函数返回一个对象，如果去掉小括号，大括号将表示这是一个函数体，而不是对象
+const increment = (number) => ({type: 'INCREMENT', data:number})  
+
+2.2
+reducer
+根据老的state和action，产生新的state的纯函数
+eg：
+export  function counter(state = 0, action) {
+    switch(action.type) {
+        case 'INCREMENT':
+            return state+action.data
+        case 'DECREMENT':
+            return state-action.data
+        default:
+            return state
+        }
+}
+注意：返回一个新的状态，不要修改原来的状态
+
+2.3 store
+将state，action与reducer联系在一起的对象
+如何得到store对象：
+import {createStore} from 'redux';
+import counter from './reducers/counter' // 自己定义的
+//这句代码在创建出一个store对象的时候，内部就会第一次调用reducer函数得到初始的state
+const store = createStore(counter)  
+此对象的功能：
+getState(): 得到state
+dispatch(action): 分发action，触发reducer调用，产生新的state
+subscribe(listener): 注册监听，当产生了新的state时，自动调用
+
+（四）react-redux
+一个react的插件库，作用就是解耦react与redux的代码，简化redux代码
+1. react-redux将所有的组件分为了两大类：
+UI组件：
+只负责UI的呈现，不带有任何业务逻辑。
+通过props接收数据，不使用任何redux的API。
+一般保存在components文件夹下。
+容器组件：
+负责管理数据和业务逻辑，不负责UI的呈现。
+使用redux的API，一般保存在containers文件夹下
+
+API：Provider，connect
+Provider是一个根标签，作用是让所有组件都可以得到state数据，接收一个store
+// index.js
+ReactDOM.render( (
+<Provider store={store}>
+    <App />
+</Provider>), document.getElementById("root") )
+
+connect是一个函数，作用是用于包装UI组件生成容器组件连接组件与redux，将redux中的data和行为通过connect传给react
+中的组件
+import {connect} from 'react-redux'
+connect (
+    mapStateToprops, //这是函数
+    mapDispatchToProps  //这是对象
+)(Counter)
+eg:
+export default connect(
+    state => ( {count: state} ),
+    {increment, decrement}
+)(Counter)
+
+mapStateToProps()
+将外部数据即state对象转换成UI组件的标签属性
+const mapStateToProps = function(state) {
+    return {
+        value:state
+    }
+}
+
+mapDispatchToProps  
+将分发action的函数转换为UI组件的标签属性，简洁语法可以直接指定为actions对象或包含多个action方法的对象，同步的action
+返回一个对象，异步的action返回的一个函数
+
+eg：
+//action.js
+//这种同步的写法是redux默认的写法
+export const increment = (number) => ( {type: INCREMENT, data: number} )
+// 这种异步的写法不是redux的默认写法，如果想return一个函数必须要提前 import thunk from 'redux-thunk'
+export const incrementAsync = (number) => {
+    return dispatch => {
+        //返回一个函数，在函数中执行异步代码
+        setTimeout( () => {
+            // 1秒之后才执行分发一个同步的action，达到异步效果
+            dispatch(increment(number))
+        }, 1000)
+    }
+}
+注：编写异步功能的步骤：
+1.需要引入applyMiddleware()函数，和thunk的异步插件库
+2.在action.js中定义异步action函数
+3.在组件中调用这个异步函数
+
+2.redux-devtools调试工具
+需要先下载redux-devtools-extension
+import {composeWithDevTools} from 'redux-devtools-extension'
+const store = createStore(
+    counter,
+    composeWithDevTools(applyMiddleware(thunk))
+)
+
+3.redux文件夹下包含4个js文件
+action-types.js  这个文件里面包含所有action的type名称常量
+actions.js  这个文件中包含所有的action creator(action 的工厂函数)
+reducers.js  这个文件中包含n个reducer函数
+store.js  这个文件是redux最核心的管理对象
